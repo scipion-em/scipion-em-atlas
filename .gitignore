@@ -1,3 +1,6 @@
+# python execution files
+*.pyc
+
 # Ignore temporary packaging folder
 *.egg-info
 
