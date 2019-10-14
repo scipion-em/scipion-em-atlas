@@ -25,7 +25,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='scipion-em-atlas',  # Required
-    version='0.1',  # Required
+    version='0.1alfa',  # Required
     description='Scipion em atlas plugin.',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-atlas',  # Optional
