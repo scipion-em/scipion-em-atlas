@@ -25,7 +25,7 @@
 # **************************************************************************
 import os
 
-from pyworkflow.em import Movie, ProtImportMovies
+from pyworkflow.em import Movie, ProtImportMovies, Pointer
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 
 from atlas.objects import AtlasLocation
@@ -34,6 +34,8 @@ from atlas.parsers import EPUParser, getAtlasFromMovie, GRID_, GRIDSQUARE_MD, \
 
 
 # Define new dataset here
+from atlas.protocols import AtlasEPUImporter
+
 DataSet(name='atlas', folder='atlas',
         files={
                'root': '',
@@ -76,6 +78,12 @@ class TestBasic(BaseTest):
 
         self.launchProtocol(importMovies)
 
+        atlasProt = self.newProtocol(AtlasEPUImporter)
+
+        atlasProt.importProtocol = Pointer(importMovies)
+
+        self.launchProtocol(atlasProt)
+
     def test_FEIParser(self):
 
         protImport = MockImport()
@@ -94,11 +102,10 @@ class TestBasic(BaseTest):
         self.assertEqual(atlasLoc.hole.get(), "2872127")
         self.assertIsNotNone(atlasLoc.x.get())
         self.assertIsNotNone(atlasLoc.y.get())
+
         # Get X and Y
         x = atlasLoc.x.get()
         y = atlasLoc.y.get()
-
-        print ("Coordinates x & y: ", x, y)
 
         self.assertEqual(len(epuParser._holesLocations), 1, "Hole location not cached")
 

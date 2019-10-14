@@ -28,12 +28,12 @@ from atlas.parsers import getAtlasFromMovie
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.viewer import Viewer
 from pyworkflow.viewer import DESKTOP_TKINTER
-from atlas.protocols import AtlasImporter
+from atlas.protocols import AtlasEPUImporter
 import numpy as np
              
 class AtlasImporterViewer(Viewer):
     _environments = [DESKTOP_TKINTER]
-    _targets = [AtlasImporter]
+    _targets = [AtlasEPUImporter]
     
     def __init__(self, **kwargs):
         Viewer.__init__(self, **kwargs)

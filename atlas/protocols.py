@@ -40,7 +40,7 @@ This module will provide protocols relating cryo em atlas locations with image
 processing data
 """
 
-class AtlasImporter(EMProtocol):
+class AtlasEPUImporter(EMProtocol):
     """ Will import atlas information and relate it to the movies"""
     _label = 'Atlas importer'
 
