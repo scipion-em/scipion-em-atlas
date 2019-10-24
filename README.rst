@@ -15,7 +15,7 @@ It is working for EPU software and is making following assumptions:
 
     GRID_#*_*_GridSquare_#*_*_FoilHole_#*"
 
-    where #* represents any numeber of digits.
+    where #* represents any number of digits.
 
 5.- EPU Metadata folder is located at:  GRID_#*/DATA/Metadata/
 

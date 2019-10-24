@@ -53,7 +53,7 @@ class AtlasImporterViewer(Viewer):
         plt.axis('scaled')
         plt.autoscale(tight=True)
 
-        #self.loadAtlasImg(plt)
+        self.loadAtlasImg(plt)
 
         colors = ("cyan", "cyan", "cyan")
         area = np.pi * 3
@@ -64,18 +64,42 @@ class AtlasImporterViewer(Viewer):
     def loadAtlasImg(self, plt):
 
         # Load the atlas image
-        # THis is hard coded. Need to find out how to relate atlas image to locations.
-        img = Image.open('/extra/data/tests/atlas/GRID_05/ATLAS/Atlas_1.jpg')
+        # This is hard coded. Need to find out how to relate atlas image to locations.
+        img = Image.open(self.getAtlasImagePath())
         img = img.convert('L')
         img = img.point(lambda p: p * 1.5)
-        extX = -0.0015
-        extY = -0.00055
-        #extX = 0.00078655919060111046
-        #extY = 0.0050040725618600845
-        extWidth = 0.002
+        extWidth = self.getAtlasPlotWidth()
+        #extX = -0.0015
+        #extY = -0.00055
+        extX = self.convertUnits(-0.0010849264)
+        extY = self.convertUnits(-0.00108488)
+        #extY = extX = -extWidth/2
+
         extent = [extX, extX + extWidth,
                   extY, extY + extWidth]
         plt.imshow(img, cmap='gray', extent=extent)
+    @staticmethod
+    def convertUnits(value):
+        """ To convert native units to visual units """
+        # Units from dm files seems to be in meters, we are converting them to microns
+        return value * 10**6
+
+    def getAtlasPixelSize(self):
+
+        # TODO: To get from Atlas_1.xml > MicroscopeImage > SpatialScale > pixelSize > x
+        return self.convertUnits(5.30380813138737E-07)
+
+    def getAtlasWidth(self):
+        # TODO: Get it from the actual image
+        return 4096
+
+    def getAtlasImagePath(self):
+        # TODO: get it right
+        return '/extra/data/tests/atlas/GRID_05/ATLAS/Atlasmrc.jpg'
+
+    def getAtlasPlotWidth(self):
+        return self.getAtlasPixelSize() * self.getAtlasWidth()
+
 
     def _getData(self, atlasProt):
 
@@ -94,8 +118,8 @@ class AtlasImporterViewer(Viewer):
             x = grids[grid][0]
             y = grids[grid][1]
 
-            x.append(atlasLoc.x.get())
-            y.append(atlasLoc.y.get())
+            x.append(self.convertUnits(atlasLoc.x.get()))
+            y.append(self.convertUnits(atlasLoc.y.get()))
 
         # Create data
         return grids
