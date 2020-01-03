@@ -27,18 +27,20 @@
 import datetime
 import os
 
-from pyworkflow.em import Movie, EMProtocol, Acquisition
+from pwem.objects import Movie, Acquisition
+from pwem.protocols import EMProtocol
 from pyworkflow.mapper.sqlite import ID
 from pyworkflow.protocol import Protocol, params, STATUS_NEW
 from pyworkflow.utils.properties import Message
 
-from atlas.objects import AtlasLocation
-from atlas.parsers import setAtlasToMovie, EPUParser
+from .objects import AtlasLocation
+from .parsers import setAtlasToMovie, EPUParser
 
 """
 This module will provide protocols relating cryo em atlas locations with image
 processing data
 """
+
 
 class AtlasEPUImporter(EMProtocol):
     """ Will import atlas information and relate it to the movies"""
@@ -110,7 +112,7 @@ class AtlasEPUImporter(EMProtocol):
         try:
             parser.decorateMovie(importProtocol, movie, atlasLoc)
         except Exception as e:
-            print ("EPU parser can't add atlas location for %s. Error: %s" % (movie.getMicName(), e))
+            print("EPU parser can't add atlas location for %s. Error: %s" % (movie.getMicName(), e))
 
         setAtlasToMovie(movie, atlasLoc)
 
@@ -156,7 +158,6 @@ class AtlasEPUImporter(EMProtocol):
             idleStep = self._steps[0]
             if idleStep.isWaiting():
                 idleStep.setStatus(STATUS_NEW)
-
 
     def _insertNewMoviesSteps(self, newMovieIds):
         """ Insert steps to find atlas information for a movie (from streaming)

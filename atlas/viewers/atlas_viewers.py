@@ -24,12 +24,14 @@
 # *
 # **************************************************************************
 from PIL import Image
-from atlas.parsers import getAtlasFromMovie
-from pyworkflow.gui.plotter import Plotter
-from pyworkflow.viewer import Viewer
-from pyworkflow.viewer import DESKTOP_TKINTER
-from atlas.protocols import AtlasEPUImporter
 import numpy as np
+
+from pyworkflow.gui.plotter import Plotter
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER
+
+from ..parsers import getAtlasFromMovie
+from ..protocols import AtlasEPUImporter
+
              
 class AtlasImporterViewer(Viewer):
     _environments = [DESKTOP_TKINTER]
@@ -78,6 +80,7 @@ class AtlasImporterViewer(Viewer):
         extent = [extX, extX + extWidth,
                   extY, extY + extWidth]
         plt.imshow(img, cmap='gray', extent=extent)
+
     @staticmethod
     def convertUnits(value):
         """ To convert native units to visual units """
@@ -100,7 +103,6 @@ class AtlasImporterViewer(Viewer):
     def getAtlasPlotWidth(self):
         return self.getAtlasPixelSize() * self.getAtlasWidth()
 
-
     def _getData(self, atlasProt):
 
         # We need to group data by grids
@@ -112,8 +114,8 @@ class AtlasImporterViewer(Viewer):
             atlasLoc = getAtlasFromMovie(movie)
             grid = atlasLoc.grid.get()
 
-            if not grid in grids:
-                grids[grid] = ([],[])
+            if grid not in grids:
+                grids[grid] = ([], [])
 
             x = grids[grid][0]
             y = grids[grid][1]

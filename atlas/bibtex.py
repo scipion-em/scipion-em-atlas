@@ -24,5 +24,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from  pyworkflow.protocol import bibtex
-_bibtex = bibtex._bibtex
+"""
+
+"""

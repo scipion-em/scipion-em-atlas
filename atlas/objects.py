@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em import EMObject, String, Float
+from pwem.objects import EMObject, String, Float
 
 
 class AtlasLocation(EMObject):

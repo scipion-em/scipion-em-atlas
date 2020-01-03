@@ -24,4 +24,4 @@
 # *
 # **************************************************************************
 
-from atlas_viewers import AtlasImporterViewer
+from .atlas_viewers import AtlasImporterViewer

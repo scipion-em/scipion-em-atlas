@@ -25,16 +25,17 @@
 # **************************************************************************
 import os
 
-from pyworkflow.em import Movie, ProtImportMovies, Pointer
+from pwem.objects import Movie, Pointer
+from pwem.protocols import ProtImportMovies
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 
-from atlas.objects import AtlasLocation
-from atlas.parsers import EPUParser, getAtlasFromMovie, GRID_, GRIDSQUARE_MD, \
-    TARGET_LOCATION_FILE_PATTERN
+from ..objects import AtlasLocation
+from ..parsers import (EPUParser, getAtlasFromMovie, GRID_,
+                       GRIDSQUARE_MD, TARGET_LOCATION_FILE_PATTERN)
 
 
 # Define new dataset here
-from atlas.protocols import AtlasEPUImporter
+from ..protocols import AtlasEPUImporter
 
 DataSet(name='atlas', folder='atlas',
         files={
@@ -52,6 +53,7 @@ class MockImport:
     def iterFiles(self):
 
         yield self.fileName, "id"
+
 
 class TestBasic(BaseTest):
     """ Test most basic elements """
@@ -112,7 +114,6 @@ class TestBasic(BaseTest):
         atlasLoc = AtlasLocation()
         epuParser.decorateMovie(protImport, movie, atlasLoc)
 
-
         self.assertEqual(len(epuParser._holesLocations), 1, "Hole location wrongly increased")
         self.assertEqual(atlasLoc.x.get(), x, "X value does not match")
         self.assertEqual(atlasLoc.y.get(), y, "Y value does not match")
@@ -138,6 +139,3 @@ class TestBasic(BaseTest):
         self.assertEqual(epuParser._getTargetLocationDmPath(atlasLoc),
                          os.path.join(epuParser._getGridSquareMDFolder(atlasLoc),  TARGET_LOCATION_FILE_PATTERN % atlasLoc.hole.get()),
                          "GridSquare metadata folder is wrong.")
-
-
-

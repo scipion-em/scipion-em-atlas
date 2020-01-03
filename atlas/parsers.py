@@ -32,6 +32,7 @@ GRID_ = "GRID_"
 GRIDSQUARE_MD = GRIDSQUARE_IMG = "GridSquare_"
 TARGET_LOCATION_FILE_PATTERN = "TargetLocation_%s.dm"
 
+
 def setAtlasToMovie(movie, atlasLocation):
 
     setattr(movie, ATLAS_ATTR, atlasLocation)
@@ -66,7 +67,7 @@ class EPUParser:
     def _getMetadataFolder(self, atlasLocation):
         """ Returns the metadata folder for a specific GRID: Assumes the following file structure:
         GRID_XX/DATA/Metadata"""
-        return os.path.join(self._getGridFolder(atlasLocation), "DATA","Metadata")
+        return os.path.join(self._getGridFolder(atlasLocation), "DATA", "Metadata")
 
     def _getGridSquareMDFolder(self, atlasLocation):
         """ Returns the gridSquare folder under metadata folder"""
@@ -102,7 +103,7 @@ class EPUParser:
 
         holeId = atlasLocation.hole.get()
 
-        if not self._holesLocations.has_key(holeId):
+        if holeId not in self._holesLocations:
             self._holesLocations[holeId] = self.findCooordinatesFromHoleId(atlasLocation)
 
         return self._holesLocations[holeId]
@@ -133,5 +134,4 @@ class EPUParser:
                         y = stageChild.text
                         break
 
-        return x,y
-
+        return x, y
