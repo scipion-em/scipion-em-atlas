@@ -32,6 +32,3 @@ _references = ['delaRosaTrevin201693']
 
 class Plugin(pwem.Plugin):
     pass
-
-
-pwem.Domain.registerPlugin(__name__)
