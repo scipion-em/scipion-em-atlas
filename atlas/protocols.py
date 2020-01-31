@@ -179,9 +179,9 @@ class AtlasEPUImporter(EMProtocol):
         """ Insert the processMovieStep for a given movie. """
 
         # Get the movie Id
-        id = movie.getObjId()
+        objId = movie.getObjId()
 
-        if id not in self._moviesWithSteps:
+        if objId not in self._moviesWithSteps:
 
             movieDict = movie.getObjDict(includeBasic=True)
             movieStepId = self._insertFunctionStep('generateAtlasStep',
