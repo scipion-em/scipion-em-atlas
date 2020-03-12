@@ -24,6 +24,8 @@
 # *
 # **************************************************************************
 from PIL import Image
+
+from atlas.objects import SetOfAtlasLocations
 from atlas.parsers import getAtlasFromMovie
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.viewer import Viewer
@@ -33,14 +35,19 @@ import numpy as np
              
 class AtlasImporterViewer(Viewer):
     _environments = [DESKTOP_TKINTER]
-    _targets = [AtlasEPUImporter]
+    _targets = [AtlasEPUImporter, SetOfAtlasLocations]
     
     def __init__(self, **kwargs):
         Viewer.__init__(self, **kwargs)
 
-    def _visualize(self, atlasProt, **kwargs):
+    def _visualize(self, obj, **kwargs):
 
-        grids = self._getData(atlasProt)
+        atlasSet = obj
+
+        if not isinstance(obj, SetOfAtlasLocations):
+            atlasSet = obj.outputAtlas
+
+        grids = self._getData(atlasSet)
 
         for key, value in grids.items():
 
@@ -55,7 +62,7 @@ class AtlasImporterViewer(Viewer):
 
         self.loadAtlasImg(plt)
 
-        colors = ("cyan", "cyan", "cyan")
+        colors = ["cyan"] * len(x)
         area = np.pi * 3
         plotter.scatterP(x, y, s=area, c=colors, edgecolors='none', alpha=1)
 
@@ -101,15 +108,14 @@ class AtlasImporterViewer(Viewer):
         return self.getAtlasPixelSize() * self.getAtlasWidth()
 
 
-    def _getData(self, atlasProt):
+    def _getData(self, atlasSet):
 
         # We need to group data by grids
         # We will have a {"05": (x[],y[])
         grids = {}
 
         # Iterate the movies
-        for movie in atlasProt.outputMovies.iterItems():
-            atlasLoc = getAtlasFromMovie(movie)
+        for atlasLoc in atlasSet.iterItems():
             grid = atlasLoc.grid.get()
 
             if not grid in grids:

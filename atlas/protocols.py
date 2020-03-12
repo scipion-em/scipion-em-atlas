@@ -27,13 +27,14 @@
 import datetime
 import os
 
-from pyworkflow.em import Movie, EMProtocol, Acquisition
+from pwem.objects import Movie, Acquisition
+from pwem.protocols import EMProtocol
 from pyworkflow.mapper.sqlite import ID
 from pyworkflow.protocol import Protocol, params, STATUS_NEW
 from pyworkflow.utils.properties import Message
 
-from atlas.objects import AtlasLocation
-from atlas.parsers import setAtlasToMovie, EPUParser
+from atlas.objects import SetOfAtlasLocations
+from atlas.parsers import EPUParser
 
 """
 This module will provide protocols relating cryo em atlas locations with image
@@ -82,46 +83,47 @@ class AtlasEPUImporter(EMProtocol):
         # Movie is a dictionary, convert it to a proper movie object
         movie = Movie()
         movie.setAcquisition(Acquisition())
-
         movie.setAttributesFromDict(movieDict, setBasic=True,
                                     ignoreMissing=True)
 
+
         # Generate the output
-        outputMovies = self._getOutputSet()
+        outputLocations = self._getOutputSet()
 
-        newMovie = Movie()
-        newMovie.copy(movie)
-        self._addAtlasInfo(newMovie)
-        outputMovies.append(newMovie)
-        outputMovies.write()
+        al = self._getAtlasInfo(movie)
+        if al is not None:
+            outputLocations.append(al)
+            outputLocations.write()
+            self._store()
 
-        self._store()
-
-    def _addAtlasInfo(self, movie):
+    def _getAtlasInfo(self, movie):
 
         # Get the parser
         importProtocol = self.importProtocol.get()
 
         parser = EPUParser(importProtocol.filesPath.get())
 
-        # create the atlas
-        atlasLoc = AtlasLocation()
-
         try:
-            parser.decorateMovie(importProtocol, movie, atlasLoc)
+            return parser.getAtlasLocation(importProtocol, movie)
         except Exception as e:
             print ("EPU parser can't add atlas location for %s. Error: %s" % (movie.getMicName(), e))
 
-        setAtlasToMovie(movie, atlasLoc)
+    def _createSetOfAtlasLocation(self, suffix=''):
+
+        # Intentionally accessing a private createSet method
+        return self._EMProtocol__createSet(SetOfAtlasLocations,
+                                    'atlas%s.sqlite', suffix,
+                                    indexes=['_index'])
 
     def _getOutputSet(self):
 
-        if not hasattr(self, "outputMovies"):
-            newSet = self._createSetOfMovies()
-            newSet.copyInfo(self._getInputMovies())
-            self._defineOutputs(outputMovies=newSet)
+        if not hasattr(self, "outputAtlas"):
+            newSet = self._createSetOfAtlasLocation()
+            self._defineOutputs(outputAtlas=newSet)
 
-        return self.outputMovies
+            self._defineSourceRelation(self._getInputMovies(), newSet)
+
+        return self.outputAtlas
 
     def _checkNewInput(self):
         # Check if there are new movies to process from the input set

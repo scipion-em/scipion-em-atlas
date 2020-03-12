@@ -27,6 +27,8 @@ import os
 import re
 import xml.etree.ElementTree as ET
 
+from atlas.objects import AtlasLocation
+
 ATLAS_ATTR = "atlasLoc"
 GRID_ = "GRID_"
 GRIDSQUARE_MD = GRIDSQUARE_IMG = "GridSquare_"
@@ -81,7 +83,7 @@ class EPUParser:
         """ Returns the ATLAS folder. Assumes it is under GRID_XX folder and is named ATLAS"""
         return os.path.join(self._getGridFolder(atlasLocation), "ATLAS")
 
-    def decorateMovie(self, protImport, movie, atlasLocation):
+    def getAtlasLocation(self, protImport, movie):
         """ Fills atlasLocation object with:grid, gridsquare, hole, x, and y location as appear in targetLocation file
         It assumes the filename contains all the ids in it:
         GRID_05_DATA_Images - Disc1_GridSquare_1818984_DATA_FoilHole_2872127_Data_1821842_1821843_20190904_0831_Fractions_global_shifts.png
@@ -91,6 +93,7 @@ class EPUParser:
         matchingString = GRID_ + "(\d*)_.*_" + GRIDSQUARE_IMG + "(\d*)_.*_FoilHole_(\d*)"
 
         m = re.search(matchingString, movieFn)
+        atlasLocation = AtlasLocation()
         atlasLocation.grid.set(m.group(1))
         atlasLocation.gridSquare.set(m.group(2))
         atlasLocation.hole.set(m.group(3))
@@ -98,11 +101,13 @@ class EPUParser:
         atlasLocation.x.set(x)
         atlasLocation.y.set(y)
 
+        return atlasLocation
+
     def _getCoordinates(self, atlasLocation):
 
         holeId = atlasLocation.hole.get()
 
-        if not self._holesLocations.has_key(holeId):
+        if not holeId in self._holesLocations:
             self._holesLocations[holeId] = self.findCooordinatesFromHoleId(atlasLocation)
 
         return self._holesLocations[holeId]

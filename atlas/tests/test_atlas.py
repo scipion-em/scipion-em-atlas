@@ -25,11 +25,11 @@
 # **************************************************************************
 import os
 
-from pyworkflow.em import Movie, ProtImportMovies, Pointer
+from pwem.objects import Movie, Pointer
+from pwem.protocols import ProtImportMovies
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 
-from atlas.objects import AtlasLocation
-from atlas.parsers import EPUParser, getAtlasFromMovie, GRID_, GRIDSQUARE_MD, \
+from atlas.parsers import EPUParser, GRID_, GRIDSQUARE_MD, \
     TARGET_LOCATION_FILE_PATTERN
 
 
@@ -53,7 +53,7 @@ class MockImport:
 
         yield self.fileName, "id"
 
-class TestBasic(BaseTest):
+class TestAtlas(BaseTest):
     """ Test most basic elements """
 
     @classmethod
@@ -94,8 +94,7 @@ class TestBasic(BaseTest):
         epuParser = EPUParser(self.dataset.getFile('importPath'))
 
         movie = Movie("GRID_05_DATA_Images - Disc1_GridSquare_1818984_DATA_FoilHole_2872127_Data_1821842_1821843_20190904_0831_Fractions_global_shifts.mrc")
-        atlasLoc = AtlasLocation()
-        epuParser.decorateMovie(protImport, movie, atlasLoc)
+        atlasLoc = epuParser.getAtlasLocation(protImport, movie)
 
         self.assertEqual(atlasLoc.grid.get(), "05")
         self.assertEqual(atlasLoc.gridSquare.get(), "1818984")
@@ -109,8 +108,7 @@ class TestBasic(BaseTest):
 
         self.assertEqual(len(epuParser._holesLocations), 1, "Hole location not cached")
 
-        atlasLoc = AtlasLocation()
-        epuParser.decorateMovie(protImport, movie, atlasLoc)
+        atlasLoc = epuParser.getAtlasLocation(protImport, movie)
 
 
         self.assertEqual(len(epuParser._holesLocations), 1, "Hole location wrongly increased")
