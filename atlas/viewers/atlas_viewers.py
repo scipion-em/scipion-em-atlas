@@ -107,7 +107,7 @@ class AtlasImporterViewer(Viewer):
     def getAtlasPlotWidth(self):
         return self.getAtlasPixelSize() * self.getAtlasWidth()
 
-    def _getData(self, atlasProt):
+    def _getData(self, atlasSet):
 
         # We need to group data by grids
         # We will have a {"05": (x[],y[])
