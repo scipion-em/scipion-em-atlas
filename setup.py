@@ -39,5 +39,5 @@ setup(
     },
     entry_points={
         'pyworkflow.plugin': 'atlas = atlas'
-    }
+    },
 )

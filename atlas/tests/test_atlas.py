@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -29,12 +29,12 @@ from pwem.objects import Movie, Pointer
 from pwem.protocols import ProtImportMovies
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 
-from atlas.parsers import EPUParser, GRID_, GRIDSQUARE_MD, \
+from ..parsers import EPUParser, GRID_, GRIDSQUARE_MD, \
     TARGET_LOCATION_FILE_PATTERN
 
 
 # Define new dataset here
-from atlas.protocols import AtlasEPUImporter
+from ..protocols import AtlasEPUImporter
 
 DataSet(name='atlas', folder='atlas',
         files={
@@ -52,6 +52,7 @@ class MockImport:
     def iterFiles(self):
 
         yield self.fileName, "id"
+
 
 class TestAtlas(BaseTest):
     """ Test most basic elements """
@@ -110,7 +111,6 @@ class TestAtlas(BaseTest):
 
         atlasLoc = epuParser.getAtlasLocation(protImport, movie)
 
-
         self.assertEqual(len(epuParser._holesLocations), 1, "Hole location wrongly increased")
         self.assertEqual(atlasLoc.x.get(), x, "X value does not match")
         self.assertEqual(atlasLoc.y.get(), y, "Y value does not match")
@@ -136,6 +136,3 @@ class TestAtlas(BaseTest):
         self.assertEqual(epuParser._getTargetLocationDmPath(atlasLoc),
                          os.path.join(epuParser._getGridSquareMDFolder(atlasLoc),  TARGET_LOCATION_FILE_PATTERN % atlasLoc.hole.get()),
                          "GridSquare metadata folder is wrong.")
-
-
-

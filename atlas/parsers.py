@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -33,6 +33,7 @@ ATLAS_ATTR = "atlasLoc"
 GRID_ = "GRID_"
 GRIDSQUARE_MD = GRIDSQUARE_IMG = "GridSquare_"
 TARGET_LOCATION_FILE_PATTERN = "TargetLocation_%s.dm"
+
 
 def setAtlasToMovie(movie, atlasLocation):
 
@@ -68,7 +69,7 @@ class EPUParser:
     def _getMetadataFolder(self, atlasLocation):
         """ Returns the metadata folder for a specific GRID: Assumes the following file structure:
         GRID_XX/DATA/Metadata"""
-        return os.path.join(self._getGridFolder(atlasLocation), "DATA","Metadata")
+        return os.path.join(self._getGridFolder(atlasLocation), "DATA", "Metadata")
 
     def _getGridSquareMDFolder(self, atlasLocation):
         """ Returns the gridSquare folder under metadata folder"""
@@ -107,7 +108,7 @@ class EPUParser:
 
         holeId = atlasLocation.hole.get()
 
-        if not holeId in self._holesLocations:
+        if holeId not in self._holesLocations:
             self._holesLocations[holeId] = self.findCooordinatesFromHoleId(atlasLocation)
 
         return self._holesLocations[holeId]
@@ -138,5 +139,4 @@ class EPUParser:
                         y = stageChild.text
                         break
 
-        return x,y
-
+        return x, y

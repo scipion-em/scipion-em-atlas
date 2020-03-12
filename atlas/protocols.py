@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -33,13 +33,14 @@ from pyworkflow.mapper.sqlite import ID
 from pyworkflow.protocol import Protocol, params, STATUS_NEW
 from pyworkflow.utils.properties import Message
 
-from atlas.objects import SetOfAtlasLocations
-from atlas.parsers import EPUParser
+from .objects import SetOfAtlasLocations
+from .parsers import EPUParser
 
 """
 This module will provide protocols relating cryo em atlas locations with image
 processing data
 """
+
 
 class AtlasEPUImporter(EMProtocol):
     """ Will import atlas information and relate it to the movies"""
@@ -106,7 +107,7 @@ class AtlasEPUImporter(EMProtocol):
         try:
             return parser.getAtlasLocation(importProtocol, movie)
         except Exception as e:
-            print ("EPU parser can't add atlas location for %s. Error: %s" % (movie.getMicName(), e))
+            print("EPU parser can't add atlas location for %s. Error: %s" % (movie.getMicName(), e))
 
     def _createSetOfAtlasLocation(self, suffix=''):
 
@@ -159,7 +160,6 @@ class AtlasEPUImporter(EMProtocol):
             if idleStep.isWaiting():
                 idleStep.setStatus(STATUS_NEW)
 
-
     def _insertNewMoviesSteps(self, newMovieIds):
         """ Insert steps to find atlas information for a movie (from streaming)
         Params:
@@ -180,9 +180,9 @@ class AtlasEPUImporter(EMProtocol):
         """ Insert the processMovieStep for a given movie. """
 
         # Get the movie Id
-        id = movie.getObjId()
+        objId = movie.getObjId()
 
-        if id not in self._moviesWithSteps:
+        if objId not in self._moviesWithSteps:
 
             movieDict = movie.getObjDict(includeBasic=True)
             movieStepId = self._insertFunctionStep('generateAtlasStep',

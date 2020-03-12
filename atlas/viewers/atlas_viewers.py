@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -24,15 +24,14 @@
 # *
 # **************************************************************************
 from PIL import Image
-
-from atlas.objects import SetOfAtlasLocations
-from atlas.parsers import getAtlasFromMovie
-from pyworkflow.gui.plotter import Plotter
-from pyworkflow.viewer import Viewer
-from pyworkflow.viewer import DESKTOP_TKINTER
-from atlas.protocols import AtlasEPUImporter
 import numpy as np
-             
+
+from pyworkflow.gui.plotter import Plotter
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER
+from atlas.objects import SetOfAtlasLocations
+from ..protocols import AtlasEPUImporter
+
+
 class AtlasImporterViewer(Viewer):
     _environments = [DESKTOP_TKINTER]
     _targets = [AtlasEPUImporter, SetOfAtlasLocations]
@@ -85,6 +84,7 @@ class AtlasImporterViewer(Viewer):
         extent = [extX, extX + extWidth,
                   extY, extY + extWidth]
         plt.imshow(img, cmap='gray', extent=extent)
+
     @staticmethod
     def convertUnits(value):
         """ To convert native units to visual units """
@@ -107,8 +107,7 @@ class AtlasImporterViewer(Viewer):
     def getAtlasPlotWidth(self):
         return self.getAtlasPixelSize() * self.getAtlasWidth()
 
-
-    def _getData(self, atlasSet):
+    def _getData(self, atlasProt):
 
         # We need to group data by grids
         # We will have a {"05": (x[],y[])
@@ -118,8 +117,8 @@ class AtlasImporterViewer(Viewer):
         for atlasLoc in atlasSet.iterItems():
             grid = atlasLoc.grid.get()
 
-            if not grid in grids:
-                grids[grid] = ([],[])
+            if grid not in grids:
+                grids[grid] = ([], [])
 
             x = grids[grid][0]
             y = grids[grid][1]
