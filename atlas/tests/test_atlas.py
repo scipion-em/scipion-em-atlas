@@ -24,7 +24,10 @@
 # *
 # **************************************************************************
 import os
+import tempfile
 
+from PIL import Image
+from atlas.collage import Collage
 from pwem.objects import Movie, Pointer
 from pwem.protocols import ProtImportMovies
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
@@ -36,11 +39,19 @@ from ..parsers import EPUParser, GRID_, GRIDSQUARE_MD, \
 # Define new dataset here
 from ..protocols import AtlasEPUImporter
 
+class DSKeys:
+    ROOT = 'root'
+    IMPORTPATH = 'importPath'
+    TILEIMAGE1 = 'tileImage1'
+    TILEIMAGE2 = 'tileImage2'
+
 DataSet(name='atlas', folder='atlas',
         files={
-               'root': '',
-               'importPath': 'GRID_??/DATA/Images-Disc1/GridSquare_*/Data'
-                })
+            DSKeys.ROOT: '',
+            DSKeys.IMPORTPATH: 'GRID_??/DATA/Images-Disc1/GridSquare_*/Data',
+            DSKeys.TILEIMAGE1: 'GRID_05/ATLAS/Tile_1818512_0_1.jpg',
+            DSKeys.TILEIMAGE2: 'GRID_05/ATLAS/Tile_1818556_1_1.jpg'
+        })
 
 
 class MockImport:
@@ -94,12 +105,12 @@ class TestAtlas(BaseTest):
 
         epuParser = EPUParser(self.dataset.getFile('importPath'))
 
-        movie = Movie("GRID_05_DATA_Images - Disc1_GridSquare_1818984_DATA_FoilHole_2872127_Data_1821842_1821843_20190904_0831_Fractions_global_shifts.mrc")
+        movie = Movie("GRID_05_DATA_Images - Disc1_GridSquare_1818577_DATA_FoilHole_1821393_Data_1821842_1821843_20190904_0831_Fractions_global_shifts.mrc")
         atlasLoc = epuParser.getAtlasLocation(protImport, movie)
 
         self.assertEqual(atlasLoc.grid.get(), "05")
-        self.assertEqual(atlasLoc.gridSquare.get(), "1818984")
-        self.assertEqual(atlasLoc.hole.get(), "2872127")
+        self.assertEqual(atlasLoc.gridSquare.get(), "1818577")
+        self.assertEqual(atlasLoc.hole.get(), "1821393")
         self.assertIsNotNone(atlasLoc.x.get())
         self.assertIsNotNone(atlasLoc.y.get())
 
@@ -136,3 +147,34 @@ class TestAtlas(BaseTest):
         self.assertEqual(epuParser._getTargetLocationDmPath(atlasLoc),
                          os.path.join(epuParser._getGridSquareMDFolder(atlasLoc),  TARGET_LOCATION_FILE_PATTERN % atlasLoc.hole.get()),
                          "GridSquare metadata folder is wrong.")
+
+
+    def test_collage(self):
+
+        collage = Collage()
+
+        # Create a 2x2 pixel image
+        img = Image.new(mode="RGB", size=(2,2), color=(255, 255, 255))
+        collage.addImage(img)
+
+        # Create a 2x2 pixel image
+        img = Image.new(mode="RGB", size=(2, 2), color=(200, 200, 200))
+        collage.addImage(img)
+
+        self.assertEqual(collage.getSize(), (4, 2), "Collage wrong growth on X")
+
+        # Create a 2x2 pixel image
+        img = Image.new(mode="RGB", size=(2, 2), color=(100, 100, 100))
+        collage.newLine()
+        collage.addImage(img)
+
+        self.assertEqual(collage.getSize(), (4, 4), "Collage wrong growth on Y after newLine")
+
+        # Get a temporary filename
+        collageFn = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        print("Collage file %s" % collageFn.name)
+        collage.save(collageFn)
+
+        # Assertions
+        self.assertTrue(os.path.exists(collageFn.name))
+
