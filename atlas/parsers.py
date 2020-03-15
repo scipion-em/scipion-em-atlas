@@ -140,3 +140,34 @@ class EPUParser:
                         break
 
         return x, y
+
+    @staticmethod
+    def getTileCoordinates(tileDmFile):
+
+        # Open the medatata file, is an xml
+        root = ET.parse(tileDmFile).getroot()
+
+        x = 0
+        y = 0
+
+        # Find the StagePosition element
+        for element in root:
+            if "AtlasPixelPosition" in element.tag:
+
+                # Get the coordinates
+                for child in element:
+
+                    lastChar = child.tag[-1]
+
+                    # Assuming order
+                    if "height" in child.tag:
+                        height = int(child.text)
+                    elif "width" in child.tag:
+                        width = int(child.text)
+                    elif "x" == lastChar:
+                        x = int(child.text)
+                    elif "y" == lastChar:
+                        y = int(child.text)
+                        break
+
+        return height, width, x, y

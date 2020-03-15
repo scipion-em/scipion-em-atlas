@@ -44,13 +44,15 @@ class DSKeys:
     IMPORTPATH = 'importPath'
     TILEIMAGE1 = 'tileImage1'
     TILEIMAGE2 = 'tileImage2'
+    TILE1DM = 'tile1dm'
 
 DataSet(name='atlas', folder='atlas',
         files={
             DSKeys.ROOT: '',
             DSKeys.IMPORTPATH: 'GRID_??/DATA/Images-Disc1/GridSquare_*/Data',
-            DSKeys.TILEIMAGE1: 'GRID_05/ATLAS/Tile_1818512_0_1.jpg',
-            DSKeys.TILEIMAGE2: 'GRID_05/ATLAS/Tile_1818556_1_1.jpg'
+            DSKeys.TILEIMAGE1: 'GRID_05/ATLAS/Tile_1818556_1_1.jpg',
+            DSKeys.TILEIMAGE2: 'GRID_05/ATLAS/Tile_1818512_0_1.jpg',
+            DSKeys.TILE1DM: 'GRID_05/ATLAS/Tile_1818512_0_1.dm',
         })
 
 
@@ -178,3 +180,25 @@ class TestAtlas(BaseTest):
         # Assertions
         self.assertTrue(os.path.exists(collageFn.name))
 
+    def test_collage_with_tiles(self):
+
+        collage = Collage()
+
+        # Add one tile
+        collage.addImageFn(self.dataset.getFile(DSKeys.TILEIMAGE1))
+        collage.addImageFn(self.dataset.getFile(DSKeys.TILEIMAGE2))
+
+        # Get a temporary filename
+        collageFn = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        print("Tiles collage file at %s" % collageFn.name)
+        collage.save(collageFn)
+
+        # Assertions
+        self.assertTrue(os.path.exists(collageFn.name))
+
+    def test_tile_parsing(self):
+
+        # Get x and y of the tile, base on the dm file
+        h, w, x,y = EPUParser.getTileCoordinates(self.dataset.getFile(DSKeys.TILE1DM))
+
+        self.assertEqual((h, w, x, y), (907, 907, 1592,1592), 'Tile coordinates extraction is wrong')
