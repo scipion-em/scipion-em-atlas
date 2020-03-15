@@ -45,6 +45,7 @@ class DSKeys:
     TILEIMAGE1 = 'tileImage1'
     TILEIMAGE2 = 'tileImage2'
     TILE1DM = 'tile1dm'
+    TILEMRC1= 'mrc1'
 
 DataSet(name='atlas', folder='atlas',
         files={
@@ -53,6 +54,7 @@ DataSet(name='atlas', folder='atlas',
             DSKeys.TILEIMAGE1: 'GRID_05/ATLAS/Tile_1818556_1_1.jpg',
             DSKeys.TILEIMAGE2: 'GRID_05/ATLAS/Tile_1818512_0_1.jpg',
             DSKeys.TILE1DM: 'GRID_05/ATLAS/Tile_1818512_0_1.dm',
+            DSKeys.TILEMRC1: 'GRID_05/ATLAS/Tile_1818512_0_1.mrc',
         })
 
 
@@ -152,7 +154,7 @@ class TestAtlas(BaseTest):
 
 
     def test_collage(self):
-
+        """ Tests basic collage composition"""
         collage = Collage()
 
         # Create a 2x2 pixel image
@@ -178,7 +180,32 @@ class TestAtlas(BaseTest):
         collage.save(collageFn)
 
         # Assertions
-        self.assertTrue(os.path.exists(collageFn.name))
+        img = Image.open(collageFn)
+        self.assertEqual((4,4), img.size, "Wrong collage size when using 4 2x2 PIL images without coordinates")
+
+    def test_collage_with_coords(self):
+        """ Tests basic collage composition"""
+        collage = Collage()
+
+        # Create a 2x2 pixel image
+        img = Image.new(mode="RGB", size=(2,2), color=(255, 255, 255))
+        collage.addImage(img)
+
+        # Create a 2x2 pixel image
+        img = Image.new(mode="RGB", size=(2, 2), color=(200, 200, 200))
+        # Add it with coordinates
+        collage.addImage(img, (1, 1))
+
+        self.assertEqual(collage.getSize(), (3, 3), "Collage wrong growth when using coordinates")
+
+        # Get a temporary filename
+        collageFn = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        print("Collage with coordinates file %s" % collageFn.name)
+        collage.save(collageFn)
+
+        # Assertions
+        img = Image.open(collageFn)
+        self.assertEqual((3,3), img.size, "Wrong collage size when using 2 2x2 PIL images with coordinates")
 
     def test_collage_with_tiles(self):
 
@@ -194,11 +221,24 @@ class TestAtlas(BaseTest):
         collage.save(collageFn)
 
         # Assertions
-        self.assertTrue(os.path.exists(collageFn.name))
-
+        img = Image.open(collageFn)
+        self.assertEqual((512*2, 512), img.size, "Wrong collage size when using atlas jpg as tiles")
     def test_tile_parsing(self):
 
         # Get x and y of the tile, base on the dm file
         h, w, x,y = EPUParser.getTileCoordinates(self.dataset.getFile(DSKeys.TILE1DM))
 
         self.assertEqual((h, w, x, y), (907, 907, 1592,1592), 'Tile coordinates extraction is wrong')
+
+    def test_tile_mrc_to_jpg(self):
+
+        # Get a temporary filename
+        tileJpg = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+
+        EPUParser.convertTile(self.dataset.getFile(DSKeys.TILEMRC1), tileJpg.name)
+
+        print("MRC tile converted to jpg at %s" % tileJpg.name)
+
+        # Assertions
+        img = Image.open(tileJpg)
+        self.assertEqual((4096 , 4096), img.size, "Wrong collage size when using atlas jpg as tiles")

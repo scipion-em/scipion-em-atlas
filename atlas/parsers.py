@@ -27,6 +27,8 @@ import os
 import re
 import xml.etree.ElementTree as ET
 
+from pwem.emlib.image import ImageHandler
+
 from atlas.objects import AtlasLocation
 
 ATLAS_ATTR = "atlasLoc"
@@ -143,7 +145,7 @@ class EPUParser:
 
     @staticmethod
     def getTileCoordinates(tileDmFile):
-
+        """ Returns height, with, x, y from the xml fo the tile file"""
         # Open the medatata file, is an xml
         root = ET.parse(tileDmFile).getroot()
 
@@ -171,3 +173,8 @@ class EPUParser:
                         break
 
         return height, width, x, y
+
+    @staticmethod
+    def convertTile( mrcfile, ouptut):
+        ih = ImageHandler()
+        ih.convert(inputObj=mrcfile, outputObj=ouptut)
