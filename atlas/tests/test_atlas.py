@@ -62,17 +62,6 @@ DataSet(name='atlas', folder='atlas',
         })
 
 
-class MockImport:
-
-    def __init__(self, fileName="foo"):
-
-        self.fileName = fileName
-
-    def iterFiles(self):
-
-        yield self.fileName, "id"
-
-
 class TestAtlas(BaseTest):
     """ Test most basic elements """
 
@@ -104,9 +93,11 @@ class TestAtlas(BaseTest):
 
         self.launchProtocol(atlasProt)
 
-    def test_FEIParser(self):
+        # Test what the low res atlas (mrc to jpg 4096x4096) has been produced
+        self.assertTrue(os.path.exists(atlasProt._getExtraPath("GRID05_atlas.jpg")))
 
-        protImport = MockImport()
+
+    def test_FEIParser(self):
 
         # Test movie decoration
         commonPath = self.dataset.getFile('root')
@@ -114,7 +105,7 @@ class TestAtlas(BaseTest):
         epuParser = EPUParser(self.dataset.getFile('importPath'))
 
         movie = Movie("GRID_05_DATA_Images - Disc1_GridSquare_1818577_DATA_FoilHole_1821393_Data_1821842_1821843_20190904_0831_Fractions_global_shifts.mrc")
-        atlasLoc = epuParser.getAtlasLocation(protImport, movie)
+        atlasLoc = epuParser.getAtlasLocation(movie)
 
         self.assertEqual(atlasLoc.grid.get(), "05")
         self.assertEqual(atlasLoc.gridSquare.get(), "1818577")
@@ -128,7 +119,7 @@ class TestAtlas(BaseTest):
 
         self.assertEqual(len(epuParser._holesLocations), 1, "Hole location not cached")
 
-        atlasLoc = epuParser.getAtlasLocation(protImport, movie)
+        atlasLoc = epuParser.getAtlasLocation(movie)
 
         self.assertEqual(len(epuParser._holesLocations), 1, "Hole location wrongly increased")
         self.assertEqual(atlasLoc.x.get(), x, "X value does not match")
@@ -155,6 +146,9 @@ class TestAtlas(BaseTest):
         self.assertEqual(epuParser._getTargetLocationDmPath(atlasLoc),
                          os.path.join(epuParser._getGridSquareMDFolder(atlasLoc),  TARGET_LOCATION_FILE_PATTERN % atlasLoc.hole.get()),
                          "GridSquare metadata folder is wrong.")
+
+        grids = list(epuParser.getAllGRIDFolders())
+        self.assertEqual(1, len(grids), "getAllGRIDFolders does not return 1 item")
 
 
     def test_collage(self):

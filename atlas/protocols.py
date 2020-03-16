@@ -71,9 +71,20 @@ class AtlasEPUImporter(EMProtocol):
         self._insertFunctionStep('closeStreamingStep', wait=True)
 
     def closeStreamingStep(self):
+        """ Close output set and generate HR resolution jpg from atlas mrc"""
 
-        # Close output movies
-        pass
+        parser = self._getParser()
+
+        # For each of the atlas
+        for grid, atlasFn in parser.getAllAtlas():
+
+            # generate the all atlas images from the mrc found at any GRID folder
+            parser.createLRAtlas(atlasFn, self.getAtlasJpgByGrid(grid))
+
+
+    def getAtlasJpgByGrid(self, grid):
+        """ returns the path of the background image (jpg) to be use as background for the viewers"""
+        return self._getExtraPath(grid + "_atlas.jpg")
 
     def _getInputMovies(self):
 
@@ -87,7 +98,6 @@ class AtlasEPUImporter(EMProtocol):
         movie.setAttributesFromDict(movieDict, setBasic=True,
                                     ignoreMissing=True)
 
-
         # Generate the output
         outputLocations = self._getOutputSet()
 
@@ -100,9 +110,7 @@ class AtlasEPUImporter(EMProtocol):
     def _getAtlasInfo(self, movie):
 
         # Get the parser
-        importProtocol = self.importProtocol.get()
-
-        parser = EPUParser(importProtocol.filesPath.get())
+        parser = self._getParser()
 
         try:
             return parser.getAtlasLocation(movie)
@@ -214,6 +222,10 @@ class AtlasEPUImporter(EMProtocol):
         # If None, we load it
 
         self._checkNewInput()
+
+    # -------------------------- Helper functions ------------------------------
+    def _getParser(self):
+        return  EPUParser(self.importProtocol.get().filesPath.get())
 
     # -------------------------- INFO functions --------------------------------
     def _summary(self):

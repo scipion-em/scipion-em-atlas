@@ -67,6 +67,22 @@ class EPUParser:
         """ Returns the path common to all grids: Assumes path contains GRID_"""
         return self.importPath.split(GRID_)[0]
 
+    def getAllGRIDFolders(self):
+        commonPath = self._getCommonPathToAllGrids()
+        for gridFolder in os.listdir(commonPath):
+            fullPath = os.path.join(commonPath,gridFolder)
+            # If it's a folder and starts with GRID_
+            if os.path.isdir(fullPath) and gridFolder.startswith(GRID_):
+                yield gridFolder, fullPath
+
+    def getAllAtlas(self):
+        """ Returns all atlas files present under the import path"""
+        for gridFolder, fullPath in self.getAllGRIDFolders():
+
+            # Get the atlas folder
+            atlasFolder = self._getAtlasFolderFn(fullPath)
+            yield gridFolder, self._getAtlasMrcImageFn(atlasFolder)
+
     def _getGridFolder(self, atlasLocation):
         """ Returns the path for a specific GRID"""
         return os.path.join(self._getCommonPathToAllGrids(), GRID_ + atlasLocation.grid.get())
@@ -83,11 +99,11 @@ class EPUParser:
 
     def _getAtlasMrcImage(self, atlasLocation):
         """ Returns the atlas image under ATLAS folder named Atlas_1.mrc"""
-        return os.path.join(self._getAtlasFolder(atlasLocation), "Atlas_1.mrc")
+        return self._getAtlasMrcImageFn(self._getAtlasFolder(atlasLocation))
 
     def _getAtlasFolder(self, atlasLocation):
         """ Returns the ATLAS folder. Assumes it is under GRID_XX folder and is named ATLAS"""
-        return os.path.join(self._getGridFolder(atlasLocation), "ATLAS")
+        return self._getAtlasFolderFn(self._getGridFolder(atlasLocation))
 
     def getAtlasLocation(self, movie):
         """ Fills atlasLocation object with:grid, gridsquare, hole, x, and y location as appear in targetLocation file
@@ -146,6 +162,16 @@ class EPUParser:
 
         return x, y
 
+    @staticmethod
+    def _getAtlasMrcImageFn(atlasFolder):
+        """ Returns the atlas image under folder passed named Atlas_1.mrc"""
+        return os.path.join(atlasFolder, "Atlas_1.mrc")
+
+    @staticmethod
+    def _getAtlasFolderFn(gridFolder):
+        """ Having a grid folder, returns it's atlas folder"""
+        return os.path.join(gridFolder, "ATLAS")
+
     @classmethod
     def getTileCoordinatesFromMrc(cls, tileMrcFile):
         """ Returns the coordinates for the mrc tile"""
@@ -191,6 +217,9 @@ class EPUParser:
     def convertMrc2Jpg(mrcfile, ouptut):
         ih = ImageHandler()
         ih.convert(inputObj=mrcfile, outputObj=ouptut)
+
+    def createLRAtlas(self, atlasMRC, outputFile):
+        return self.convertMrc2Jpg(atlasMRC, outputFile)
 
     @classmethod
     def createHRAtlas(cls, atlasFolder, outputFile):

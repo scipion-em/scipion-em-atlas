@@ -25,6 +25,7 @@
 # **************************************************************************
 from PIL import Image
 import numpy as np
+from atlas.parsers import GRID_
 
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER
@@ -59,7 +60,7 @@ class AtlasImporterViewer(Viewer):
         plt.axis('scaled')
         plt.autoscale(tight=True)
 
-        self.loadAtlasImg(plt)
+        self.loadAtlasImg(plt, grid)
 
         colors = ["cyan"] * len(x)
         area = np.pi * 3
@@ -67,14 +68,14 @@ class AtlasImporterViewer(Viewer):
 
         return plotter
 
-    def loadAtlasImg(self, plt):
+    def loadAtlasImg(self, plt, grid):
 
         # Load the atlas image
         # This is hard coded. Need to find out how to relate atlas image to locations.
-        img = Image.open(self.getAtlasImagePath())
+        img = Image.open(self.getAtlasImagePath(grid))
         img = img.convert('L')
         img = img.point(lambda p: p * 1.5)
-        extWidth = self.getAtlasPlotWidth()
+        extWidth = self.getAtlasPlotWidth(img)
         #extX = -0.0015
         #extY = -0.00055
         extX = self.convertUnits(-0.0010849264)
@@ -96,16 +97,12 @@ class AtlasImporterViewer(Viewer):
         # TODO: To get from Atlas_1.xml > MicroscopeImage > SpatialScale > pixelSize > x
         return self.convertUnits(5.30380813138737E-07)
 
-    def getAtlasWidth(self):
-        # TODO: Get it from the actual image
-        return 4096
+    def getAtlasImagePath(self, grid):
+        """ Returns the Jpg atlas file converted by the protocol from the mrc atlas"""
+        return self.protocol.getAtlasJpgByGrid(GRID_ + grid)
 
-    def getAtlasImagePath(self):
-        # TODO: get it right
-        return '/extra/data/tests/atlas/GRID_05/ATLAS/Atlasmrc.jpg'
-
-    def getAtlasPlotWidth(self):
-        return self.getAtlasPixelSize() * self.getAtlasWidth()
+    def getAtlasPlotWidth(self, atlasImage):
+        return self.getAtlasPixelSize() * atlasImage.size[0]
 
     def _getData(self, atlasSet):
 
