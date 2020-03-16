@@ -105,7 +105,7 @@ class AtlasEPUImporter(EMProtocol):
         parser = EPUParser(importProtocol.filesPath.get())
 
         try:
-            return parser.getAtlasLocation(importProtocol, movie)
+            return parser.getAtlasLocation(movie)
         except Exception as e:
             print("EPU parser can't add atlas location for %s. Error: %s" % (movie.getMicName(), e))
 

@@ -25,10 +25,13 @@
 # **************************************************************************
 import os
 import re
+import tempfile
 import xml.etree.ElementTree as ET
 
+from PIL import Image
 from pwem.emlib.image import ImageHandler
 
+from atlas.collage import Collage
 from atlas.objects import AtlasLocation
 
 ATLAS_ATTR = "atlasLoc"
@@ -78,7 +81,7 @@ class EPUParser:
 
         return os.path.join(self._getMetadataFolder(atlasLocation), GRIDSQUARE_MD + atlasLocation.gridSquare.get())
 
-    def _getAtlasImage(self, atlasLocation):
+    def _getAtlasMrcImage(self, atlasLocation):
         """ Returns the atlas image under ATLAS folder named Atlas_1.mrc"""
         return os.path.join(self._getAtlasFolder(atlasLocation), "Atlas_1.mrc")
 
@@ -86,7 +89,7 @@ class EPUParser:
         """ Returns the ATLAS folder. Assumes it is under GRID_XX folder and is named ATLAS"""
         return os.path.join(self._getGridFolder(atlasLocation), "ATLAS")
 
-    def getAtlasLocation(self, protImport, movie):
+    def getAtlasLocation(self, movie):
         """ Fills atlasLocation object with:grid, gridsquare, hole, x, and y location as appear in targetLocation file
         It assumes the filename contains all the ids in it:
         GRID_05_DATA_Images - Disc1_GridSquare_1818984_DATA_FoilHole_2872127_Data_1821842_1821843_20190904_0831_Fractions_global_shifts.png
@@ -143,6 +146,16 @@ class EPUParser:
 
         return x, y
 
+    @classmethod
+    def getTileCoordinatesFromMrc(cls, tileMrcFile):
+        """ Returns the coordinates for the mrc tile"""
+        return  cls.getTileCoordinates(cls.getTileFileFromMrc(tileMrcFile))
+
+    @staticmethod
+    def getTileFileFromMrc(tileMrcFile):
+
+        return tileMrcFile.replace(".mrc", ".dm")
+
     @staticmethod
     def getTileCoordinates(tileDmFile):
         """ Returns height, with, x, y from the xml fo the tile file"""
@@ -175,6 +188,53 @@ class EPUParser:
         return height, width, x, y
 
     @staticmethod
-    def convertTile( mrcfile, ouptut):
+    def convertMrc2Jpg(mrcfile, ouptut):
         ih = ImageHandler()
         ih.convert(inputObj=mrcfile, outputObj=ouptut)
+
+    @classmethod
+    def createHRAtlas(cls, atlasFolder, outputFile):
+        """ Create a full resolution atlas based on high resolution atlas mrc files"""
+
+        # Get a temporary folder to work there
+        tmpFolder = tempfile.TemporaryDirectory()
+        print("Creating HR atlas at temporary folder:  %s" % tmpFolder.name)
+
+        # Instantiate a collage object
+        collage = Collage()
+
+        # Cancel compression error with large files
+        Image.MAX_IMAGE_PIXELS = None
+
+        # For each mrc file:
+        for file in os.listdir(atlasFolder):
+            # If it's an mrc file
+            if file.startswith("Tile") and file.endswith(".mrc"):
+
+                mrcFn = os.path.join(atlasFolder,file)
+
+                # Convert it to jpg
+                # Compose new JPG file name
+                newJpg = os.path.basename(file) + ".jpg"
+                newJpg = os.path.join(tmpFolder.name, newJpg)
+
+                # make the actual conversion
+                EPUParser.convertMrc2Jpg(mrcFn, newJpg)
+                h,w,x,y = cls.getTileCoordinatesFromMrc(mrcFn)
+
+                # Coordinates are scaled, I see values relative to 907 height
+                xmrc, ymrc, z, n = ImageHandler().getDimensions(mrcFn)
+                ratio = xmrc/w
+
+                # New coordinates using the ratio. 1 should remain 1
+                newCoordsX = 1 if x == 1 else int(x * ratio)
+                newCoordsY = 1 if y == 1 else int(y * ratio)
+
+                collage.addImageFn(newJpg, (newCoordsX, newCoordsY))
+
+
+        collage.save(outputFile)
+
+
+
+

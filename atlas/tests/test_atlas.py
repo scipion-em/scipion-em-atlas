@@ -46,15 +46,19 @@ class DSKeys:
     TILEIMAGE2 = 'tileImage2'
     TILE1DM = 'tile1dm'
     TILEMRC1= 'mrc1'
+    ATLAS_DIR='atlasdir'
+
+ATLAS_FOLDER = 'GRID_05/ATLAS'
 
 DataSet(name='atlas', folder='atlas',
         files={
             DSKeys.ROOT: '',
             DSKeys.IMPORTPATH: 'GRID_??/DATA/Images-Disc1/GridSquare_*/Data',
-            DSKeys.TILEIMAGE1: 'GRID_05/ATLAS/Tile_1818556_1_1.jpg',
-            DSKeys.TILEIMAGE2: 'GRID_05/ATLAS/Tile_1818512_0_1.jpg',
-            DSKeys.TILE1DM: 'GRID_05/ATLAS/Tile_1818512_0_1.dm',
-            DSKeys.TILEMRC1: 'GRID_05/ATLAS/Tile_1818512_0_1.mrc',
+            DSKeys.ATLAS_DIR: ATLAS_FOLDER,
+            DSKeys.TILEIMAGE1: os.path.join(ATLAS_FOLDER,'Tile_1818556_1_1.jpg'),
+            DSKeys.TILEIMAGE2: os.path.join(ATLAS_FOLDER,'Tile_1818512_0_1.jpg'),
+            DSKeys.TILE1DM: os.path.join(ATLAS_FOLDER,'Tile_1818512_0_1.dm'),
+            DSKeys.TILEMRC1: os.path.join(ATLAS_FOLDER,'Tile_1818512_0_1.mrc'),
         })
 
 
@@ -235,10 +239,27 @@ class TestAtlas(BaseTest):
         # Get a temporary filename
         tileJpg = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
 
-        EPUParser.convertTile(self.dataset.getFile(DSKeys.TILEMRC1), tileJpg.name)
+        EPUParser.convertMrc2Jpg(self.dataset.getFile(DSKeys.TILEMRC1), tileJpg.name)
 
         print("MRC tile converted to jpg at %s" % tileJpg.name)
 
         # Assertions
         img = Image.open(tileJpg)
         self.assertEqual((4096 , 4096), img.size, "Wrong collage size when using atlas jpg as tiles")
+
+    def test_createHRAtlas(self):
+
+        # Get a temporary filename
+        fullAtlasJpg = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+
+        EPUParser.createHRAtlas(self.dataset.getFile(DSKeys.ATLAS_DIR), fullAtlasJpg.name)
+
+        print("Full JPG atlas at %s" % fullAtlasJpg.name)
+
+        # Assertions
+        img = Image.open(fullAtlasJpg)
+
+        ratio = 4096/907
+        expectedDimensions = int(3184 * ratio) + 4096
+
+        self.assertEqual((expectedDimensions, expectedDimensions), img.size, "Wrong collage size when using atlas jpg as tiles")
