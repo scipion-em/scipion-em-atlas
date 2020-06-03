@@ -119,10 +119,8 @@ class AtlasEPUImporter(EMProtocol):
 
     def _createSetOfAtlasLocation(self, suffix=''):
 
-        # Intentionally accessing a private createSet method
-        return self._EMProtocol__createSet(SetOfAtlasLocations,
-                                    'atlas%s.sqlite', suffix,
-                                    indexes=['_index'])
+        return SetOfAtlasLocations.create('atlas%s.sqlite', suffix,
+                                          indexes=['_index'])
 
     def _getOutputSet(self):
 
