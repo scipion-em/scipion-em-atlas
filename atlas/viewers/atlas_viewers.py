@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -24,23 +24,30 @@
 # *
 # **************************************************************************
 from PIL import Image
-from atlas.parsers import getAtlasFromMovie
-from pyworkflow.gui.plotter import Plotter
-from pyworkflow.viewer import Viewer
-from pyworkflow.viewer import DESKTOP_TKINTER
-from atlas.protocols import AtlasEPUImporter
 import numpy as np
-             
+from atlas.parsers import GRID_
+
+from pyworkflow.gui.plotter import Plotter
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER
+from atlas.objects import SetOfAtlasLocations
+from ..protocols import AtlasEPUImporter
+
+
 class AtlasImporterViewer(Viewer):
     _environments = [DESKTOP_TKINTER]
-    _targets = [AtlasEPUImporter]
+    _targets = [AtlasEPUImporter, SetOfAtlasLocations]
     
     def __init__(self, **kwargs):
         Viewer.__init__(self, **kwargs)
 
-    def _visualize(self, atlasProt, **kwargs):
+    def _visualize(self, obj, **kwargs):
 
-        grids = self._getData(atlasProt)
+        atlasSet = obj
+
+        if not isinstance(obj, SetOfAtlasLocations):
+            atlasSet = obj.outputAtlas
+
+        grids = self._getData(atlasSet)
 
         for key, value in grids.items():
 
@@ -53,22 +60,22 @@ class AtlasImporterViewer(Viewer):
         plt.axis('scaled')
         plt.autoscale(tight=True)
 
-        self.loadAtlasImg(plt)
+        self.loadAtlasImg(plt, grid)
 
-        colors = ("cyan", "cyan", "cyan")
+        colors = ["cyan"] * len(x)
         area = np.pi * 3
         plotter.scatterP(x, y, s=area, c=colors, edgecolors='none', alpha=1)
 
         return plotter
 
-    def loadAtlasImg(self, plt):
+    def loadAtlasImg(self, plt, grid):
 
         # Load the atlas image
         # This is hard coded. Need to find out how to relate atlas image to locations.
-        img = Image.open(self.getAtlasImagePath())
+        img = Image.open(self.getAtlasImagePath(grid))
         img = img.convert('L')
         img = img.point(lambda p: p * 1.5)
-        extWidth = self.getAtlasPlotWidth()
+        extWidth = self.getAtlasPlotWidth(img)
         #extX = -0.0015
         #extY = -0.00055
         extX = self.convertUnits(-0.0010849264)
@@ -78,6 +85,7 @@ class AtlasImporterViewer(Viewer):
         extent = [extX, extX + extWidth,
                   extY, extY + extWidth]
         plt.imshow(img, cmap='gray', extent=extent)
+
     @staticmethod
     def convertUnits(value):
         """ To convert native units to visual units """
@@ -89,31 +97,25 @@ class AtlasImporterViewer(Viewer):
         # TODO: To get from Atlas_1.xml > MicroscopeImage > SpatialScale > pixelSize > x
         return self.convertUnits(5.30380813138737E-07)
 
-    def getAtlasWidth(self):
-        # TODO: Get it from the actual image
-        return 4096
+    def getAtlasImagePath(self, grid):
+        """ Returns the Jpg atlas file converted by the protocol from the mrc atlas"""
+        return self.protocol.getAtlasJpgByGrid(GRID_ + grid)
 
-    def getAtlasImagePath(self):
-        # TODO: get it right
-        return '/extra/data/tests/atlas/GRID_05/ATLAS/Atlasmrc.jpg'
+    def getAtlasPlotWidth(self, atlasImage):
+        return self.getAtlasPixelSize() * atlasImage.size[0]
 
-    def getAtlasPlotWidth(self):
-        return self.getAtlasPixelSize() * self.getAtlasWidth()
-
-
-    def _getData(self, atlasProt):
+    def _getData(self, atlasSet):
 
         # We need to group data by grids
         # We will have a {"05": (x[],y[])
         grids = {}
 
         # Iterate the movies
-        for movie in atlasProt.outputMovies.iterItems():
-            atlasLoc = getAtlasFromMovie(movie)
+        for atlasLoc in atlasSet.iterItems():
             grid = atlasLoc.grid.get()
 
-            if not grid in grids:
-                grids[grid] = ([],[])
+            if grid not in grids:
+                grids[grid] = ([], [])
 
             x = grids[grid][0]
             y = grids[grid][1]

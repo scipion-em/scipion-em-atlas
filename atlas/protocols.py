@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -27,18 +27,20 @@
 import datetime
 import os
 
-from pyworkflow.em import Movie, EMProtocol, Acquisition
+from pwem.objects import Movie, Acquisition
+from pwem.protocols import EMProtocol
 from pyworkflow.mapper.sqlite import ID
 from pyworkflow.protocol import Protocol, params, STATUS_NEW
 from pyworkflow.utils.properties import Message
 
-from atlas.objects import AtlasLocation
-from atlas.parsers import setAtlasToMovie, EPUParser
+from .objects import SetOfAtlasLocations
+from .parsers import EPUParser
 
 """
 This module will provide protocols relating cryo em atlas locations with image
 processing data
 """
+
 
 class AtlasEPUImporter(EMProtocol):
     """ Will import atlas information and relate it to the movies"""
@@ -69,9 +71,20 @@ class AtlasEPUImporter(EMProtocol):
         self._insertFunctionStep('closeStreamingStep', wait=True)
 
     def closeStreamingStep(self):
+        """ Close output set and generate HR resolution jpg from atlas mrc"""
 
-        # Close output movies
-        pass
+        parser = self._getParser()
+
+        # For each of the atlas
+        for grid, atlasFn in parser.getAllAtlas():
+
+            # generate the all atlas images from the mrc found at any GRID folder
+            parser.createLRAtlas(atlasFn, self.getAtlasJpgByGrid(grid))
+
+
+    def getAtlasJpgByGrid(self, grid):
+        """ returns the path of the background image (jpg) to be use as background for the viewers"""
+        return self._getExtraPath(grid + "_atlas.jpg")
 
     def _getInputMovies(self):
 
@@ -82,46 +95,42 @@ class AtlasEPUImporter(EMProtocol):
         # Movie is a dictionary, convert it to a proper movie object
         movie = Movie()
         movie.setAcquisition(Acquisition())
-
         movie.setAttributesFromDict(movieDict, setBasic=True,
                                     ignoreMissing=True)
 
         # Generate the output
-        outputMovies = self._getOutputSet()
+        outputLocations = self._getOutputSet()
 
-        newMovie = Movie()
-        newMovie.copy(movie)
-        self._addAtlasInfo(newMovie)
-        outputMovies.append(newMovie)
-        outputMovies.write()
+        al = self._getAtlasInfo(movie)
+        if al is not None:
+            outputLocations.append(al)
+            outputLocations.write()
+            self._store()
 
-        self._store()
-
-    def _addAtlasInfo(self, movie):
+    def _getAtlasInfo(self, movie):
 
         # Get the parser
-        importProtocol = self.importProtocol.get()
-
-        parser = EPUParser(importProtocol.filesPath.get())
-
-        # create the atlas
-        atlasLoc = AtlasLocation()
+        parser = self._getParser()
 
         try:
-            parser.decorateMovie(importProtocol, movie, atlasLoc)
+            return parser.getAtlasLocation(movie)
         except Exception as e:
-            print ("EPU parser can't add atlas location for %s. Error: %s" % (movie.getMicName(), e))
+            print("EPU parser can't add atlas location for %s. Error: %s" % (movie.getMicName(), e))
 
-        setAtlasToMovie(movie, atlasLoc)
+    def _createSetOfAtlasLocation(self, suffix=''):
+
+        return SetOfAtlasLocations.create('atlas%s.sqlite', suffix,
+                                          indexes=['_index'])
 
     def _getOutputSet(self):
 
-        if not hasattr(self, "outputMovies"):
-            newSet = self._createSetOfMovies()
-            newSet.copyInfo(self._getInputMovies())
-            self._defineOutputs(outputMovies=newSet)
+        if not hasattr(self, "outputAtlas"):
+            newSet = self._createSetOfAtlasLocation()
+            self._defineOutputs(outputAtlas=newSet)
 
-        return self.outputMovies
+            self._defineSourceRelation(self._getInputMovies(), newSet)
+
+        return self.outputAtlas
 
     def _checkNewInput(self):
         # Check if there are new movies to process from the input set
@@ -157,7 +166,6 @@ class AtlasEPUImporter(EMProtocol):
             if idleStep.isWaiting():
                 idleStep.setStatus(STATUS_NEW)
 
-
     def _insertNewMoviesSteps(self, newMovieIds):
         """ Insert steps to find atlas information for a movie (from streaming)
         Params:
@@ -178,9 +186,9 @@ class AtlasEPUImporter(EMProtocol):
         """ Insert the processMovieStep for a given movie. """
 
         # Get the movie Id
-        id = movie.getObjId()
+        objId = movie.getObjId()
 
-        if id not in self._moviesWithSteps:
+        if objId not in self._moviesWithSteps:
 
             movieDict = movie.getObjDict(includeBasic=True)
             movieStepId = self._insertFunctionStep('generateAtlasStep',
@@ -212,6 +220,10 @@ class AtlasEPUImporter(EMProtocol):
         # If None, we load it
 
         self._checkNewInput()
+
+    # -------------------------- Helper functions ------------------------------
+    def _getParser(self):
+        return  EPUParser(self.importProtocol.get().filesPath.get())
 
     # -------------------------- INFO functions --------------------------------
     def _summary(self):

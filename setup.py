@@ -25,16 +25,19 @@ with open('requirements.txt') as f:
 
 setup(
     name='scipion-em-atlas',  # Required
-    version='0.1alfa',  # Required
+    version='0.1.1-alfa',  # Required
     description='Scipion em atlas plugin.',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-atlas',  # Optional
     author='Pablo Conesa',  # Optional
     author_email='scipion@cnb.csic.es',  # Optional
-    keywords='scipion cryoem imageprocessing scipion-2.0',  # Optional
+    keywords='scipion cryoem imageprocessing scipion-3.0',  # Optional
     packages=find_packages(),
     install_requires=[requirements],
     package_data={  # Optional
        'atlas': ['icon.png', 'protocols.conf'],
-    }
+    },
+    entry_points={
+        'pyworkflow.plugin': 'atlas = atlas'
+    },
 )
