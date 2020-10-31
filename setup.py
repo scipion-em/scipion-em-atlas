@@ -11,6 +11,8 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
+from atlas import __version__
+
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
@@ -25,7 +27,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='scipion-em-atlas',  # Required
-    version='0.1.1-alfa',  # Required
+    version=__version__,  # Required
     description='Scipion em atlas plugin.',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-atlas',  # Optional

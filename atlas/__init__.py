@@ -26,6 +26,7 @@
 
 import pwem
 
+__version__ = '0.1.1-alfa'
 _logo = "icon.png"
 _references = ['delaRosaTrevin201693']
 
