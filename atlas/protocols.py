@@ -43,7 +43,104 @@ processing data
 
 
 class AtlasEPUImporter(EMProtocol):
-    """ Will import atlas information and relate it to the movies"""
+    """
+    Imports atlas information from EPU acquisitions and associates it with
+    collected movie data, enabling the spatial context of microscopy acquisitions
+    to be preserved throughout cryo-EM processing workflows. The protocol links
+    each movie to its corresponding acquisition location within an atlas and
+    generates atlas visualizations that can be used for navigation, inspection,
+    and quality assessment of the data collection process.
+
+    AI Generated:
+
+    Atlas Importer (AtlasEPUImporter) - User Manual
+        Overview
+
+        The Atlas Importer protocol establishes the relationship between cryo-EM
+        movies and the atlas information generated during automated data
+        collection. Its primary purpose is to provide a geographical view of
+        where individual acquisitions were collected on the specimen grid,
+        allowing users to visualize the distribution of data across different
+        atlas regions.
+
+        In modern cryo-EM facilities, automated acquisition systems frequently
+        collect large numbers of movies from multiple grid squares and holes.
+        While the movies themselves contain the experimental information needed
+        for image processing, atlas data provides valuable contextual information
+        about where those acquisitions originated. This protocol bridges those
+        two sources of information and makes the acquisition context available
+        for downstream visualization and analysis.
+
+        Inputs and General Workflow
+
+        The protocol requires a movie import workflow as its primary input. The
+        imported movies serve as the reference dataset from which acquisition
+        metadata can be associated with atlas locations.
+
+        During execution, the protocol examines the acquisition information
+        available for each movie and searches for the corresponding atlas
+        records. Whenever a valid association is found, the acquisition location
+        is recorded and stored as part of the generated output dataset. This
+        creates a structured relationship between image data and its position
+        within the original specimen atlas.
+
+        Atlas Visualization
+
+        In addition to associating acquisition locations, the protocol generates
+        atlas images suitable for visualization environments. These atlas views
+        provide a convenient way to inspect grid coverage, identify acquisition
+        patterns, and understand the spatial distribution of collected data.
+
+        Such visual representations are particularly useful during data quality
+        assessment, troubleshooting acquisition sessions, and reviewing the
+        overall sampling strategy used during microscope operation.
+
+        Streaming Operation
+
+        The protocol is designed to operate efficiently in environments where
+        movies may become available progressively during data acquisition.
+        Rather than requiring all data to be present at the beginning of
+        execution, it can continuously monitor incoming acquisitions and extend
+        the atlas associations as new movies appear.
+
+        This capability makes the protocol especially valuable in live data
+        collection scenarios, where researchers wish to monitor acquisition
+        coverage while an experiment is still running.
+
+        Outputs and Interpretation
+
+        The primary output consists of a collection of atlas locations linked to
+        the corresponding movie acquisitions. Each entry represents the spatial
+        position of a movie within the atlas framework, providing a direct
+        connection between image data and specimen location.
+
+        Additional atlas visualization files are generated to facilitate
+        graphical exploration of acquisition coverage. These visual products can
+        help identify under-sampled regions, acquisition biases, or potential
+        issues affecting specific areas of a grid.
+
+        Practical Applications
+
+        Atlas-based visualization is particularly useful when evaluating large
+        screening campaigns, comparing acquisition strategies across grids, or
+        investigating whether data quality correlates with specific specimen
+        regions. Researchers can use the resulting atlas information to better
+        understand collection efficiency and optimize future acquisition
+        sessions.
+
+        In facility environments, atlas associations also provide an intuitive
+        way to communicate acquisition results to users who may not be familiar
+        with the detailed metadata stored within movie datasets.
+
+        Final Perspective
+
+        The Atlas Importer protocol enhances cryo-EM data management by linking
+        acquired movies to their physical locations on the specimen atlas. By
+        preserving this spatial context, it enables more informative data
+        exploration, improves acquisition traceability, and supports a deeper
+        understanding of how collection strategies influence downstream
+        processing and analysis.
+    """
     _label = 'Atlas importer'
 
     def __init__(self, **kwargs):
